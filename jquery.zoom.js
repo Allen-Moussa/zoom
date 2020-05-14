@@ -192,7 +192,8 @@
 					$source
 						.on('mouseenter.zoom', start)
 						.on('mouseleave.zoom', stop)
-						.on(mousemove, zoom.move);
+						.on(mousemove, zoom.move)
+						.one('mousemove.zoom', start);
 				}
 
 				// Touch fallback
