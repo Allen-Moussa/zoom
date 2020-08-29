@@ -3,6 +3,10 @@
 	license: MIT
 	http://www.jacklmoore.com/zoom
 */
+// Allen - modified zoom 1.7.21 by appending this extra code: .one("mousemove.zoom",t) to the end of .on(m,f.move)  -  This change allows to zoom to activate one page reload/new page whilst the mouse is moving over the image.
+// Allen - modified zoom 1.7.21 by merging in this pull request which adds "dead zone" which give us the ability to move the image faster to the edges. See: https://github.com/jackmoore/zoom/pull/98/commits/08df1b5c490203ed55a0ce20874d430a3d725bf9
+
+
 (function ($) {
 	var defaults = {
 		url: false,
@@ -13,11 +17,12 @@
 		touch: true, // enables a touch fallback
 		onZoomIn: false,
 		onZoomOut: false,
-		magnify: 1
+		magnify: 1,
+		deadZone: 0
 	};
 
 	// Core Zoom Logic, independent of event listeners.
-	$.zoom = function(target, source, img, magnify) {
+	$.zoom = function(target, source, img, magnify, settings) {
 		var targetHeight,
 			targetWidth,
 			sourceHeight,
@@ -71,6 +76,18 @@
 				var left = (e.pageX - offset.left),
 					top = (e.pageY - offset.top);
 
+				if(settings.deadZone > 0){
+					var centerLeft = sourceWidth / 2;
+					var centerTop = sourceHeight / 2;
+					if(left < centerLeft || left > centerLeft){
+						left = left - settings.deadZone * (((centerLeft - left) * 100 / centerLeft) / 100);
+
+						if(top < centerTop || top > centerTop){
+							top = top - settings.deadZone * (((centerTop - top) * 100 / centerTop) / 100);
+						}
+					}
+				}
+
 				top = Math.max(Math.min(top, sourceHeight), 0);
 				left = Math.max(Math.min(left, sourceWidth), 0);
 
@@ -115,7 +132,7 @@
 			}.bind(this, target.style.position, target.style.overflow));
 
 			img.onload = function () {
-				var zoom = $.zoom(target, source, img, settings.magnify);
+				var zoom = $.zoom(target, source, img, settings.magnify, settings);
 
 				function start(e) {
 					zoom.init();
